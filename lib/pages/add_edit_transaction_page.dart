@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/transaction_model.dart';
 import '../providers/finance_provider.dart';
+import 'package:flutter/services.dart';
+
 
 class AddEditTransactionPage extends StatefulWidget {
   final TransactionModel? existing;
@@ -33,6 +35,27 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     }
   }
 
+  class ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+    String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (newText.isEmpty) {
+      return const TextEditingValue();
+    }
+    double number = double.parse(newText);
+    final formatter = NumberFormat.decimalPattern('id_ID');
+    String formattedText = formatter.format(number);
+    return newValue.copyWith(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<FinanceProvider>();
@@ -59,12 +82,22 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
               // Amount
               TextFormField(
-                initialValue: widget.existing != null ? widget.existing!.amount.toString() : '',
-                decoration: InputDecoration(labelText: 'Nominal (${currency.currencySymbol.trim()})', border: const OutlineInputBorder()),
-                keyboardType: TextInputType.number,
-                validator: (v) => (v == null || v.isEmpty) ? 'Nominal wajib' : null,
-                onSaved: (v) => _amount = double.tryParse(v!.replaceAll(',', '.')) ?? 0,
-              ),
+      initialValue: widget.existing != null
+          ? NumberFormat.decimalPattern('id_ID').format(widget.existing!.amount)
+          : '',
+      decoration: InputDecoration(
+          labelText: 'Nominal (${currency.currencySymbol.trim()})',
+          border: const OutlineInputBorder()),
+      keyboardType: TextInputType.number,
+      // Terapkan formatter di sini
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        ThousandsSeparatorInputFormatter(),
+      ],
+      validator: (v) => (v == null || v.isEmpty) ? 'Nominal wajib' : null,
+      // Ubah onSaved untuk menghapus titik sebelum menyimpan
+      onSaved: (v) => _amount = double.tryParse(v!.replaceAll('.', '')) ?? 0,
+    ),
               const SizedBox(height: 12),
 
               // Category

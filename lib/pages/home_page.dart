@@ -14,7 +14,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<FinanceProvider>();
-    final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
+    final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
     return Scaffold(
       appBar: AppBar(
@@ -88,35 +88,76 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Mini Bar Chart income vs expense
-            SizedBox(
-              height: 180,
-              child: BarChart(
-                BarChartData(
-                  borderData: FlBorderData(show: false),
-                  titlesData: FlTitlesData(
-                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (v, meta) {
-                          final label = v.toInt() == 0 ? 'Income' : 'Expense';
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(label, style: const TextStyle(fontSize: 12)),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  barGroups: [
-                    BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: prov.income)]),
-                    BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: prov.expense)]),
-                  ],
-                ),
-              ),
+// ... (kode lainnya)
+
+// Ganti widget BarChart yang ada dengan kode berikut:
+SizedBox(
+  height: 200,
+  child: BarChart(
+    BarChartData(
+      alignment: BarChartAlignment.spaceAround,
+      borderData: FlBorderData(show: false),
+      titlesData: FlTitlesData(
+        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            getTitlesWidget: (value, meta) {
+              final style = TextStyle(
+                color: Colors.grey[700],
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              );
+              Widget text;
+              switch (value.toInt()) {
+                case 0:
+                  text = Text('Pemasukan', style: style);
+                  break;
+                case 1:
+                  text = Text('Pengeluaran', style: style);
+                  break;
+                default:
+                  text = Text('', style: style);
+                  break;
+              }
+              return SideTitleWidget(axisSide: meta.axisSide, child: text);
+            },
+            reservedSize: 30,
+          ),
+        ),
+      ),
+      gridData: FlGridData(show: false),
+      barGroups: [
+        BarChartGroupData(
+          x: 0,
+          barRods: [
+            BarChartRodData(
+              toY: prov.income,
+              color: Colors.green,
+              width: 22,
+              borderRadius: BorderRadius.circular(8),
             ),
+          ],
+        ),
+        BarChartGroupData(
+          x: 1,
+          barRods: [
+            BarChartRodData(
+              toY: prov.expense,
+              color: Colors.red,
+              width: 22,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+),
+
+// ... (kode lainnya)
 
             const SizedBox(height: 16),
             const Text('Transaksi Terbaru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -146,21 +187,33 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _summaryCard(String title, String value, IconData icon, Color color) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            CircleAvatar(backgroundColor: color.withOpacity(.12), child: Icon(icon, color: color)),
-            const SizedBox(width: 12),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ]),
-          ],
-        ),
+// farhanfarruq/personal_finance/personal_finance-9dc4a3471684685b48bafc19424765a788b29d69/lib/pages/home_page.dart
+Widget _summaryCard(String title, String value, IconData icon, Color color) {
+  return Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          CircleAvatar(backgroundColor: color.withOpacity(.12), child: Icon(icon, color: color)),
+          const SizedBox(width: 12),
+          // Tambahkan Expanded di sini untuk mengatasi overflow
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  // Opsi untuk menampilkan elipsis (...) jika teks masih terlalu panjang
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

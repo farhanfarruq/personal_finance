@@ -60,3 +60,42 @@ class FinanceProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+Map<CategoryModel, double> get expenseByCategory {
+  final Map<CategoryModel, double> data = {};
+  final expenseTxs = transactions.where((tx) => tx.type == TxType.expense);
+
+  if (expenseTxs.isEmpty) return data;
+
+  for (var tx in expenseTxs) {
+    // Menambahkan orElse untuk mencegah error jika kategori tidak ditemukan
+    final category = categories.firstWhere(
+      (cat) => cat.id == tx.categoryId,
+      orElse: () => CategoryModel(id: 0, name: 'Lainnya', icon: '❓'),
+    );
+    data[category] = (data[category] ?? 0) + tx.amount;
+  }
+  return data;
+}
+
+  // Getter baru untuk tren pengeluaran harian
+  Map<int, double> get dailyExpenseTrend {
+    final Map<int, double> data = {};
+    final expenseTxs =
+        transactions.where((tx) => tx.type == TxType.expense);
+    for (var tx in expenseTxs) {
+      data[tx.date.day] = (data[tx.date.day] ?? 0) + tx.amount;
+    }
+    return data;
+  }
+  
+  // Getter baru untuk tren pemasukan harian
+  Map<int, double> get dailyIncomeTrend {
+    final Map<int, double> data = {};
+    final incomeTxs = transactions.where((tx) => tx.type == TxType.income);
+    for (var tx in incomeTxs) {
+      data[tx.date.day] = (data[tx.date.day] ?? 0) + tx.amount;
+    }
+    return data;
+  }
+}
